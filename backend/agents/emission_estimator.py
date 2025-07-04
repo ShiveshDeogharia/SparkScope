@@ -16,6 +16,14 @@ def _load_factors() -> pd.DataFrame:
 
 FACTORS = _load_factors()
 
+# Mapping incoming payload keys to (Category, Activity) in the DEFRA table
+ACTIVITY_MAP = {
+    "electricity_kwh":  ("energy",    "electricity grid average"),
+    "road_freight_tkm": ("transport", "rigid hgv >17t"),
+    # "natural_gas_kwh": ("fuel", "natural gas"),   # add more later
+}
+
+
 
 def get_factor(category: str, activity: str) -> float:
     """
@@ -33,30 +41,27 @@ def get_factor(category: str, activity: str) -> float:
 
 def estimate_emissions(payload: dict) -> dict:
     """
-    payload example:
-    {
-        "electricity_kwh": 5000,
-        "road_freight_tkm": 12 * 520  # pallets × km
-    }
+    Convert a payload of activities into a dict of emissions.
+    Example payload:
+        {"electricity_kwh": 5000, "road_freight_tkm": 6240}
     """
-    results = {}
+    results: dict[str, float] = {}
     total = 0.0
 
-    if "electricity_kwh" in payload:
-        ef = get_factor("Energy", "Electricity grid average")
-        co2 = payload["electricity_kwh"] * ef
-        results["electricity"] = co2
-        total += co2
+    # ---------- ONE single loop ----------
+    for key, amount in payload.items():
+        if key not in ACTIVITY_MAP:
+            print(f"⚠️  Unknown activity key skipped: {key}")
+            continue
 
-    if "road_freight_tkm" in payload:
-        ef = get_factor("Transport", "Rigid HGV >17t")
-        co2 = payload["road_freight_tkm"] * ef
-        results["transport"] = co2
+        cat, act = ACTIVITY_MAP[key]
+        ef = get_factor(cat, act)
+        co2 = amount * ef
+        results[key] = co2
         total += co2
 
     results["total"] = total
     return results
-
 
 if __name__ == "__main__":
     demo_payload = {
