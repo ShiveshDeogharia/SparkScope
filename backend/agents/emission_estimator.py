@@ -65,11 +65,11 @@ def estimate_emissions(payload: dict) -> dict:
 
 if __name__ == "__main__":
     demo_payload = {
-    "electricity_kwh": 5000,          # 5 MWh electricity
-    "road_freight_tkm": 12 * 520      # 12 pallets × 520 km
-}
-print("Demo payload →", demo_payload)
-print("Estimated emissions (kgCO2e):")
-print(estimate_emissions(demo_payload))
+        "electricity_kwh": 5000,          # 5 MWh electricity
+        "road_freight_tkm": 12 * 520      # 12 pallets × 520 km
+    }
 
+    print("Demo payload →", demo_payload)
+    print("Estimated emissions (kgCO2e):")
+    print(estimate_emissions(demo_payload))
 
