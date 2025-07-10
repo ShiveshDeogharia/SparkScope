@@ -1,0 +1,5 @@
+git Category,Activity,Unit,kgCO2e_per_unit
+Energy,Electricity grid average,kWh,0.82
+Transport,Rigid HGV >17t,tonne-km,0.130
+Transport,Air freight (intl),tonne-km,0.602
+Fuel,Natural gas,kWh,0.185
