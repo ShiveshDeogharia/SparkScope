@@ -8,21 +8,22 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-
 DATA_DIR = Path(__file__).resolve().parents[3] / "recommender_data"
 INDEX_DIR = Path(__file__).resolve().parents[2] / "faiss_index"
 
 def build_faiss_index():
     print(f"📂 Loading text files from: {DATA_DIR}")
 
-    # 1. Load all .txt files
-    loaders = [
-        TextLoader(str(file), encoding="utf-8")
-        for file in DATA_DIR.glob("*.txt")
-    ]
     documents = []
-    for loader in loaders:
-        documents.extend(loader.load())
+
+    # 1. Load and tag each file with topic metadata
+    for file in DATA_DIR.glob("*.txt"):
+        topic = file.stem.lower()  # e.g., "electricity", "transport", etc.
+        loader = TextLoader(str(file), encoding="utf-8")
+        docs = loader.load()
+        for doc in docs:
+            doc.metadata["topic"] = topic
+        documents.extend(docs)
 
     print(f"📄 Loaded {len(documents)} documents")
 
