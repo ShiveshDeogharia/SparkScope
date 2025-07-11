@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 
 # ---------- Load DEFRA factors once ----------
-DATA_DIR = Path(__file__).parent.parent / "data"
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
 DEFRA_CSV = DATA_DIR / "defra_factors.csv"
 
 def _load_factors() -> pd.DataFrame:
@@ -18,10 +18,13 @@ FACTORS = _load_factors()
 
 # Mapping incoming payload keys to (Category, Activity) in the DEFRA table
 ACTIVITY_MAP = {
-    "electricity_kwh":  ("energy",    "electricity grid average"),
-    "road_freight_tkm": ("transport", "rigid hgv >17t"),
-    # "natural_gas_kwh": ("fuel", "natural gas"),   # add more later
+    "electricity_kwh":    ("energy",    "electricity grid average"),
+    "road_freight_tkm":   ("transport", "rigid hgv >17t"),
+    "natural_gas_kwh":    ("fuel",      "natural gas"),
+    "air_freight_tkm":    ("transport", "air freight (intl)")
 }
+
+
 
 
 
@@ -65,11 +68,14 @@ def estimate_emissions(payload: dict) -> dict:
 
 if __name__ == "__main__":
     demo_payload = {
-        "electricity_kwh": 5000,          # 5 MWh electricity
-        "road_freight_tkm": 12 * 520      # 12 pallets × 520 km
+        "electricity_kwh": 5000,
+        "road_freight_tkm": 12 * 520,
+        "natural_gas_kwh": 12000,
+        "air_freight_tkm": 2500
     }
 
-    print("Demo payload →", demo_payload)
-    print("Estimated emissions (kgCO2e):")
+    print("🧪 Demo payload →", demo_payload)
+    print("🌍 Estimated emissions (kgCO2e):")
     print(estimate_emissions(demo_payload))
+
 
