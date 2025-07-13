@@ -4,6 +4,11 @@
 **Goal:** Help suppliers estimate their carbon emissions and receive actionable recommendations to reduce them, accelerating Walmart's Project Gigaton™.
 
 ---
+## 📽️ Demo Video
+
+[![Watch the demo](https://img.youtube.com/vi/AowVcYrim-c/0.jpg)](https://www.youtube.com/watch?v=AowVcYrim-c)
+
+---
 
 ## 🧠 What It Does
 

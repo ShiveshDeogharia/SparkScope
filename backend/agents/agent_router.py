@@ -9,7 +9,7 @@ from .document_ingestion.extract_text import (
 )
 from .verification.badge_logic import get_supplier_badge
 
-
+# Central agent registry
 AGENTS = {
     "verify": verify_payload,
     "recommend": get_recommendations,
@@ -21,6 +21,19 @@ AGENTS = {
 
 
 def get_agent(name: str):
-    if name not in AGENTS:
-        raise ValueError(f"Agent '{name}' not found.")
-    return AGENTS[name]
+    """
+    Retrieves the callable agent function by name.
+
+    Args:
+        name (str): Agent key, e.g. 'verify', 'recommend'
+
+    Returns:
+        Callable agent function.
+
+    Raises:
+        ValueError: If the agent name is not in the registry.
+    """
+    agent = AGENTS.get(name)
+    if not agent:
+        raise ValueError(f"❌ Agent '{name}' not found. Available agents: {list(AGENTS.keys())}")
+    return agent
