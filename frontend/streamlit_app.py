@@ -14,7 +14,19 @@ import pandas as pd
 from backend.agents.agent_router import get_agent
 from backend.agents.recommender.rag_query import get_recommendations
 
-# -------------------- Utility --------------------
+# -------------------- Page Setup --------------------
+st.set_page_config(page_title="SparkScope | Emission Assistant", layout="centered")
+st.title("🌱 SparkScope — Supplier Sustainability Assistant")
+st.markdown("<h4 style='text-align: center; color: grey;'>Helping you estimate, verify, and reduce your carbon footprint.</h4>", unsafe_allow_html=True)
+
+# -------------------- Sidebar Branding --------------------
+st.sidebar.image("frontend/assets/spark_walmart_logo.png", use_container_width=True)
+st.sidebar.markdown("### SparkScope")
+st.sidebar.markdown("Supplier Sustainability Toolkit")
+st.sidebar.divider()
+st.sidebar.markdown("Built with 💚 for the Walmart Sparkathon")
+
+# -------------------- Utility: Show Dashboard --------------------
 def show_dashboard(emissions: dict):
     st.divider()
     st.subheader("📊 Emission Summary")
@@ -28,7 +40,7 @@ def show_dashboard(emissions: dict):
     st.bar_chart(chart_data.set_index("Activity"))
 
     badge = get_agent("badge")(emissions["total"])
-    st.success(f"🏍️ Supplier Badge: **{badge}**")
+    st.success(f"🏅 Supplier Emission Badge: **{badge}**")
 
 # -------------------- Session Setup --------------------
 if "chat_history" not in st.session_state:
@@ -38,20 +50,16 @@ if "show_form" not in st.session_state:
 if "emissions" not in st.session_state:
     st.session_state.emissions = None
 
-st.set_page_config(page_title="SparkScope Chat", layout="centered")
-st.title("🌱 SparkScope Onboarding Agent")
+# -------------------- Chat Agent --------------------
+st.divider()
+st.subheader("💬 Chat With Our Agent")
 
-# -------------------- Replay Chat History --------------------
-for role, msg in st.session_state.chat_history:
-    st.chat_message(role).write(msg)
-
-# -------------------- Chat Input --------------------
-user_msg = st.chat_input("Say something like: I used 5000 kWh and shipped 12 pallets over 520 km")
+user_msg = st.chat_input("Try something like: I used 5000 kWh and shipped 12 pallets over 520 km")
 
 if user_msg:
     st.session_state.chat_history.append(("user", user_msg))
 
-    # 🔍 Recommendation Queries
+    # 🧠 Trigger Recommendations
     if any(word in user_msg.lower() for word in ["reduce", "cut", "lower"]):
         for topic in ["electricity", "transport", "packaging"]:
             if topic in user_msg.lower():
@@ -62,7 +70,7 @@ if user_msg:
                 st.rerun()
                 break
 
-    # 🧐 Regex Extraction
+    # 🧠 Regex-based Extraction
     electricity_match = re.search(r"(\d+(?:\.\d+)?)\s*kwh", user_msg, re.I)
     freight_match = re.search(r"(\d+)\s*pallets.*?(\d+)\s*km", user_msg, re.I)
 
@@ -75,118 +83,111 @@ if user_msg:
         payload["road_freight_tkm"] = pallets * km
 
     if payload:
-        st.session_state.chat_history.append(("assistant", f"📦 Extracted activity data:\n```json\n{payload}\n```"))
-
+        st.session_state.chat_history.append(("assistant", f"📦 Detected activity data:\n```json\n{payload}\n```"))
         warnings = get_agent("verify")(payload)
         if warnings:
-            st.session_state.chat_history.append(("assistant", "🛑 Verification warnings:"))
+            st.session_state.chat_history.append(("assistant", "⚠️ Verification Warnings:"))
             for w in warnings:
                 st.session_state.chat_history.append(("assistant", f"• {w}"))
-
         try:
-            response = requests.post("http://localhost:8000/api/estimate", json={"activities": payload})
-            if response.status_code == 200:
-                st.session_state.emissions = response.json()["emissions"]
+            res = requests.post("http://localhost:8000/api/estimate", json={"activities": payload})
+            if res.status_code == 200:
+                st.session_state.emissions = res.json()["emissions"]
                 st.session_state.show_form = False
                 st.rerun()
             else:
-                st.session_state.chat_history.append(("assistant", f"⚠️ API error: {response.text}"))
+                st.session_state.chat_history.append(("assistant", f"❌ API Error: {res.text}"))
         except Exception as e:
-            st.session_state.chat_history.append(("assistant", f"❌ Failed to reach API: {e}"))
+            st.session_state.chat_history.append(("assistant", f"🚨 API Exception: {e}"))
     else:
-        st.session_state.chat_history.append(("assistant", "❌ Sorry, I couldn’t understand the activity data. Please fill the form below."))
+        st.session_state.chat_history.append(("assistant", "🔧 I couldn’t understand your data. Please fill the manual form below."))
         st.session_state.show_form = True
         st.rerun()
 
-# -------------------- Fallback Manual Form --------------------
+# -------------------- Replay Chat History --------------------
+for role, msg in st.session_state.chat_history:
+    st.chat_message(role).write(msg)
+
+# -------------------- Manual Entry Form --------------------
 if st.session_state.show_form:
-    with st.form("fallback_form"):
-        st.write("👉 Please enter your activity data manually:")
+    st.divider()
+    with st.expander("📝 Manual Activity Entry", expanded=True):
+        with st.form("manual_form"):
+            electricity = st.number_input("Electricity (kWh)", min_value=0.0, step=100.0)
+            pallets = st.number_input("Pallets shipped", min_value=0)
+            distance = st.number_input("Transport distance (km)", min_value=0)
+            natural_gas = st.number_input("Natural gas (kWh)", min_value=0.0, step=100.0)
+            air_freight = st.number_input("Air freight (tonne-km)", min_value=0.0, step=100.0)
+            submitted = st.form_submit_button("Submit Data")
 
-        electricity = st.number_input("Electricity used (kWh)", min_value=0.0, step=100.0)
-        pallets = st.number_input("Road freight: Number of pallets", min_value=0, step=1)
-        distance = st.number_input("Road freight: Distance transported (km)", min_value=0, step=10)
-        natural_gas = st.number_input("Natural gas used (kWh)", min_value=0.0, step=100.0)
-        air_freight = st.number_input("Air freight (tonne-km)", min_value=0.0, step=100.0)
+        if submitted:
+            payload = {
+                "electricity_kwh": electricity,
+                "road_freight_tkm": pallets * distance,
+                "natural_gas_kwh": natural_gas,
+                "air_freight_tkm": air_freight
+            }
+            st.session_state.chat_history.append(("assistant", f"✅ Received manual data:\n```json\n{payload}\n```"))
+            warnings = get_agent("verify")(payload)
+            if warnings:
+                st.session_state.chat_history.append(("assistant", "⚠️ Verification Warnings:"))
+                for w in warnings:
+                    st.session_state.chat_history.append(("assistant", f"• {w}"))
+            try:
+                res = requests.post("http://localhost:8000/api/estimate", json={"activities": payload})
+                if res.status_code == 200:
+                    st.session_state.emissions = res.json()["emissions"]
+                    st.session_state.show_form = False
+                    st.rerun()
+                else:
+                    st.session_state.chat_history.append(("assistant", f"❌ API Error: {res.text}"))
+            except Exception as e:
+                st.session_state.chat_history.append(("assistant", f"🚨 API Exception: {e}"))
 
-        submitted = st.form_submit_button("Submit")
-
-    if submitted:
-        payload = {
-            "electricity_kwh": electricity,
-            "road_freight_tkm": pallets * distance,
-            "natural_gas_kwh": natural_gas,
-            "air_freight_tkm": air_freight
-        }
-
-        st.session_state.chat_history.append(("assistant", f"✅ Received manual data:\n```json\n{payload}\n```"))
-
-        warnings = get_agent("verify")(payload)
-        if warnings:
-            st.session_state.chat_history.append(("assistant", "🛑 Verification warnings:"))
-            for w in warnings:
-                st.session_state.chat_history.append(("assistant", f"• {w}"))
-
-        try:
-            response = requests.post("http://localhost:8000/api/estimate", json={"activities": payload})
-            if response.status_code == 200:
-                st.session_state.emissions = response.json()["emissions"]
-                st.session_state.show_form = False
-                st.rerun()
-            else:
-                st.session_state.chat_history.append(("assistant", f"⚠️ API error: {response.text}"))
-        except Exception as e:
-            st.session_state.chat_history.append(("assistant", f"❌ Failed to reach API: {e}"))
-
-# -------------------- Show Dashboard --------------------
+# -------------------- Dashboard --------------------
 if st.session_state.emissions:
     show_dashboard(st.session_state.emissions)
     st.session_state.emissions = None
 
-# -------------------- Upload PDF Invoice --------------------
+# -------------------- Upload PDF --------------------
 st.divider()
-st.subheader("📄 Upload an Invoice PDF")
+with st.expander("📄 Upload Invoice PDF"):
+    pdf = st.file_uploader("Upload your invoice (PDF)", type=["pdf"])
+    if pdf:
+        tmp_path = ROOT_DIR / "tmp_invoice.pdf"
+        with open(tmp_path, "wb") as f:
+            f.write(pdf.read())
 
-pdf_file = st.file_uploader("Upload your invoice here", type=["pdf"])
+        raw_text = get_agent("extract_text")(tmp_path)
+        st.text_area("🧾 Extracted Text", raw_text, height=200)
 
-if pdf_file is not None:
-    tmp_path = ROOT_DIR / "tmp_invoice.pdf"
-    with open(tmp_path, "wb") as f:
-        f.write(pdf_file.read())
+        payload = get_agent("extract_payload")(raw_text)
+        if payload:
+            st.success("✅ Activity data extracted:")
+            st.code(payload, language="json")
 
-    raw_text = get_agent("extract_text")(tmp_path)
-    st.text_area("📝 Extracted text:", raw_text, height=200)
-
-    payload = get_agent("extract_payload")(raw_text)
-
-    if payload:
-        st.success("📦 Extracted activity data:")
-        st.code(payload, language="json")
-
-        emissions = get_agent("estimate")(payload)
-        if emissions:
-            st.session_state.emissions = emissions
-            st.rerun()
+            emissions = get_agent("estimate")(payload)
+            if emissions:
+                st.session_state.emissions = emissions
+                st.rerun()
+            else:
+                st.error("❌ Emission estimation failed.")
         else:
-            st.error("⚠️ Failed to estimate emissions. Please try again or enter data manually.")
-    else:
-        st.warning("⚠️ Couldn’t extract any activity data.")
-        st.info("👉 Try re-uploading or use the form above.")
+            st.warning("⚠️ No valid data found.")
 
-# -------------------- Emission Reduction Tips --------------------
+# -------------------- Recommendations --------------------
 st.divider()
-st.subheader("💡 Get Emission Reduction Tips")
-
-reduction_topic = st.selectbox(
-    "What type of emission do you want to reduce?",
-    ["", "electricity", "transport", "packaging"]
-)
-
-if reduction_topic:
-    st.info(f"Asking for ideas to reduce: **{reduction_topic}**")
-    suggestions = get_recommendations(user_msg or reduction_topic, reduction_topic)
-
-
-    st.success("Here are some tactics you can try:")
-    for idea in suggestions:
-        st.markdown(f"• {idea}")
+with st.expander("💡 Emission Reduction Tips"):
+    reduction_topic = st.selectbox("Choose a category to reduce emissions:", ["", "electricity", "transport", "packaging"])
+    if reduction_topic:
+        st.info(f"Asking AI for ideas to reduce **{reduction_topic}** emissions...")
+        try:
+            suggestions = get_recommendations(reduction_topic, reduction_topic)
+            if suggestions:
+                st.success("Here are your tips:")
+                for idea in suggestions:
+                    st.markdown(f"• {idea}")
+            else:
+                st.warning("🤖 AI didn’t return any meaningful tips. Please try again.")
+        except Exception as e:
+            st.error(f"⚠️ Error while fetching suggestions: {e}")
