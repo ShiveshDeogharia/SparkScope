@@ -103,6 +103,6 @@ Together, SparkScope helps Walmart and its suppliers move faster towards Gigaton
 
 ## 🤝 Team
 
-Built with love by [Team KrishnaMind] for the Walmart Sparkathon.  
+Built with love by Team KrishnaMind for the Walmart Sparkathon.  
 Let’s decarbonize supply chains, one supplier at a time! 🌎
 
