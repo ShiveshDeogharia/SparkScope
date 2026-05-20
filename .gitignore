@@ -5,7 +5,7 @@ __pycache__/
 *.pyc
 *.pdf
 /tmp_invoice.pdf
-
+presentation/
 ### Node ###
 # Logs
 logs
