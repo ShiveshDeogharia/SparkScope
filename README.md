@@ -1,81 +1,270 @@
-# 🌱 SparkScope — AI-Powered Supplier Onboarding & Emission Reduction Platform
+# 🌱 SparkScope — AI-Powered Supplier Sustainability & Emission Intelligence Platform
 
-**Built for: Walmart Sparkathon**  
-**Goal:** Help suppliers estimate their carbon emissions and receive actionable recommendations to reduce them, accelerating Walmart's Project Gigaton™.
+> Built for Walmart Sparkathon to help suppliers estimate carbon emissions and receive grounded AI recommendations for reduction.
 
----
-## 📽️ Demo Video
-
-[![Watch the demo](https://img.youtube.com/vi/AowVcYrim-c/0.jpg)](https://www.youtube.com/watch?v=AowVcYrim-c)
-
----
-
-## 🧠 What It Does
-
-SparkScope offers:
-- 📄 **Invoice Upload**: Extracts emission activities from PDF invoices.
-- 🧠 **Chatbot Input**: Understands natural language like “I used 5000 kWh and shipped 12 pallets over 520 km”.
-- ✍️ **Manual Form**: Allows fallback entry for emission data.
-- 📊 **Emission Dashboard**: Visualizes total and activity-wise carbon emissions.
-- 🏅 **Supplier Badge**: Assigns sustainability badges based on emissions.
-- 💡 **RAG Recommendations**: Uses Retrieval-Augmented Generation to suggest emission reduction strategies.
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
+![Streamlit](https://img.shields.io/badge/Streamlit-Frontend-red)
+![RAG](https://img.shields.io/badge/RAG-FAISS%20%2B%20LangChain-purple)
 
 ---
 
-## 🗂️ Folder Structure
+## 📽 Demo
 
+🎥 **Watch Demo:**  
+https://www.youtube.com/watch?v=AowVcYrim-c
+
+---
+
+# Problem Statement
+
+Supplier sustainability reporting is often:
+
+- Spreadsheet-heavy
+- Difficult to verify
+- Fragmented across workflows
+- Lacking actionable guidance
+
+Many suppliers struggle to estimate emissions or understand how to reduce them.
+
+**SparkScope** addresses this through an AI-assisted onboarding and emission intelligence workflow.
+
+---
+
+# What SparkScope Does
+
+SparkScope enables suppliers to:
+
+### 📄 Upload Invoices
+Extract activity information directly from PDF invoices.
+
+### 💬 Use Natural Language
+Describe activities conversationally.
+
+Example:
+
+> "I used 5000 kWh and shipped 12 pallets over 520 km"
+
+### 📝 Manual Fallback Input
+Supports structured form-based submission.
+
+### 🌍 Estimate Carbon Emissions
+Computes emissions using **DEFRA emission factors**.
+
+### 🛡 Verify Input Quality
+Detects suspicious or unusual activity values.
+
+### 🏅 Assign Sustainability Badges
+Provides badge-based sustainability scoring.
+
+### 💡 Generate AI Recommendations
+Uses **Retrieval-Augmented Generation (RAG)** to produce grounded emission reduction strategies.
+
+---
+
+# 🏗 System Architecture
+
+```mermaid
+flowchart TD
+
+A[User Input] --> B{Input Type}
+
+B --> C[Invoice PDF]
+B --> D[Natural Language Chat]
+B --> E[Manual Form]
+
+C --> F[Document Parsing]
+D --> G[Payload Extraction]
+E --> G
+
+F --> H[Agent Router]
+G --> H
+
+H --> I[Verification Agent]
+H --> J[Emission Estimator]
+H --> K[RAG Recommender]
+
+I --> L[Validated Payload]
+J --> M[Carbon Estimates]
+K --> N[AI Recommendations]
+
+L --> O[Dashboard & Badge Engine]
+M --> O
+N --> O
+
+O --> P[Supplier Insights]
 ```
+
+---
+
+# Core Features
+
+## 1. Multi-Modal Supplier Onboarding
+
+SparkScope supports:
+
+- PDF invoice extraction
+- Conversational input
+- Manual structured entry
+
+This reduces spreadsheet dependency and improves accessibility.
+
+---
+
+## 2. Carbon Emission Estimation
+
+Emissions are estimated using:
+
+- DEFRA Carbon Factors dataset
+- Category mapping logic
+- Activity-specific emission factors
+
+Example:
+
+```json
+{
+  "electricity_kwh": 5000,
+  "road_freight_tkm": 6240
+}
+```
+
+↓
+
+```json
+{
+  "electricity_kwh": 1030.0,
+  "road_freight_tkm": 842.1,
+  "total": 1872.1
+}
+```
+
+---
+
+## 3. Verification Agent
+
+SparkScope validates incoming payloads and flags:
+
+- Negative values
+- Zero-value anomalies
+- Unusually high emissions
+
+Example:
+
+> ⚠ Electricity usage appears unusually high.
+
+This improves reporting reliability.
+
+---
+
+## 4. RAG-Powered Sustainability Recommendations
+
+SparkScope does **not** generate generic AI advice.
+
+Recommendations are grounded using:
+
+- Custom sustainability knowledge base
+- FAISS vector search
+- HuggingFace embeddings
+- LangChain retrieval
+- Local FLAN-T5 generation
+
+### Recommendation Pipeline
+
+```mermaid
+flowchart LR
+
+A[Knowledge Documents] --> B[Chunking]
+B --> C[Embeddings]
+C --> D[FAISS Vector Index]
+D --> E[Similarity Retrieval]
+E --> F[Prompt Construction]
+F --> G[FLAN-T5 Generation]
+G --> H[Grounded Sustainability Advice]
+```
+
+Example:
+
+Input:
+
+> "How do I reduce transport emissions?"
+
+Output:
+
+- Optimize route planning
+- Consolidate shipments
+- Adopt lower-emission logistics
+
+---
+
+# Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Streamlit |
+| Backend | FastAPI |
+| AI / RAG | LangChain + FAISS |
+| Embeddings | all-MiniLM-L6-v2 |
+| Local LLM | FLAN-T5 |
+| PDF Parsing | PyMuPDF / PDFMiner |
+| Dataset | DEFRA Carbon Factors |
+| Language | Python |
+
+---
+
+# Repository Structure
+
+```text
 SparkScope/
-├── assets/                     # Placeholder for static assets
+│
 ├── backend/
-│   ├── agents/                # All agent logic
-│   │   ├── document_ingestion/ -> extract_text.py
-│   │   ├── estimator/         -> emission_estimator.py
-│   │   ├── recommender/       -> rag_build_index.py, rag_query.py, recommend_actions.py
-│   │   ├── verification/      -> badge_logic.py, verify_payload.py
+│   ├── agents/
+│   │   ├── document_ingestion/
+│   │   ├── estimator/
+│   │   ├── recommender/
+│   │   ├── verification/
 │   │   └── agent_router.py
-│   ├── api/                   # FastAPI backend
-│   │   └── main.py
-│   ├── data/                  # CSV & sample invoice
-│   └── faiss_index/           # Vector index for RAG
-├── docs/                      # Placeholder for documentation
+│   │
+│   ├── api/
+│   ├── data/
+│   └── faiss_index/
+│
 ├── frontend/
-│   └── streamlit_app.py       # Main UI
-├── hardware/                  # (Future) hardware integration
-├── recommender_data/          # RAG source documents
-│   ├── electricity_guide.txt
-│   ├── packaging_guide.txt
-│   └── transport_emissions.txt
-├── .env.example
-├── requirements.txt
-└── README.md
+├── recommender_data/
+├── docs/
+└── requirements.txt
 ```
 
 ---
 
-## 🚀 How to Run Locally
+# ⚙ Local Setup
 
-### 1. 📦 Install Dependencies
+## 1. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-> ⚠️ Make sure Python 3.10+ is installed.
+Python 3.10+ recommended.
 
-### 2. 🧠 Build the FAISS RAG Index
+---
+
+## 2. Build FAISS Index
 
 ```bash
 python backend/agents/recommender/rag_build_index.py
 ```
 
-### 3. 🔧 Start the FastAPI Backend
+---
+
+## 3. Start FastAPI Backend
 
 ```bash
 uvicorn backend.api.main:app --reload
 ```
 
-### 4. 💻 Run the Streamlit Frontend
+---
+
+## 4. Launch Streamlit Frontend
 
 ```bash
 streamlit run frontend/streamlit_app.py
@@ -83,31 +272,31 @@ streamlit run frontend/streamlit_app.py
 
 ---
 
-## 💡 Tech Stack
+# Engineering Challenges
 
-- **Frontend**: Streamlit
-- **Backend**: FastAPI
-- **Agents**: Custom logic in Python
-- **RAG**: FAISS + HuggingFace + LangChain
-- **Extraction**: PDFMiner
-- **Verification & Estimation**: DEFRA Carbon Factors Dataset
+During development we tackled:
 
----
-
-## 🌍 Impact
-
-This tool empowers suppliers with:
-- Clarity on their emissions
-- Easy onboarding without spreadsheets
-- Personalized strategies to cut carbon
-- Progress tracking via badges
-
-Together, SparkScope helps Walmart and its suppliers move faster towards Gigaton-scale impact.
+- Extracting structured activity data from invoices
+- Handling ambiguous natural-language input
+- Grounding recommendations using retrieval
+- Validating unreliable supplier payloads
+- Integrating modular agents cleanly
 
 ---
 
-## 🤝 Team
+# Impact
 
-Built with love by Team Phoenix for the Walmart Sparkathon.  
-Let’s decarbonize supply chains, one supplier at a time! 🌎
+SparkScope helps suppliers:
 
+✅ Estimate emissions  
+✅ Understand sustainability performance  
+✅ Receive grounded reduction strategies  
+✅ Participate effectively in carbon reporting initiatives  
+
+This aligns with **Walmart Project Gigaton™** goals.
+
+---
+
+# Team Phoenix
+
+Built with ❤️ for Walmart Sparkathon.
